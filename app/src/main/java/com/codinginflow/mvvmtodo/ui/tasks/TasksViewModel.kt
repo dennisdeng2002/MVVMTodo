@@ -17,12 +17,23 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TasksViewModel @Inject constructor(
-    taskDao: TaskDao,
+    private val taskDao: TaskDao,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
     val preferences = preferencesManager.preferencesFlow
+
+    val tasks: LiveData<List<Task>> = combine(
+        searchQuery,
+        preferences
+    ) { searchQuery, preferences ->
+        return@combine Pair(searchQuery, preferences)
+    }
+        .flatMapLatest { (searchQuery, preferences) ->
+            taskDao.getTasks(searchQuery, preferences.sortOrder, preferences.hideCompleted)
+        }
+        .asLiveData()
 
     fun updateSortOrder(sortOrder: SortOrder) {
         viewModelScope.launch {
@@ -36,14 +47,11 @@ class TasksViewModel @Inject constructor(
         }
     }
 
-    val tasks: LiveData<List<Task>> = combine(
-        searchQuery,
-        preferences
-    ) { searchQuery, preferences ->
-        return@combine Pair(searchQuery, preferences)
-    }
-        .flatMapLatest { (searchQuery, preferences) ->
-            taskDao.getTasks(searchQuery, preferences.sortOrder, preferences.hideCompleted)
+    fun onTaskSelected(task: Task) {}
+
+    fun onTaskUpdated(task: Task) {
+        viewModelScope.launch {
+            taskDao.update(task)
         }
-        .asLiveData()
+    }
 }

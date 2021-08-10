@@ -13,14 +13,16 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import com.codinginflow.mvvmtodo.R
 import com.codinginflow.mvvmtodo.core.ext.onQueryTextChanged
 import com.codinginflow.mvvmtodo.data.preferences.SortOrder
+import com.codinginflow.mvvmtodo.data.task.Task
 import com.codinginflow.mvvmtodo.databinding.FragmentTasksBinding
 import com.codinginflow.mvvmtodo.ui.tasks.adapter.TasksAdapter
+import com.codinginflow.mvvmtodo.ui.tasks.adapter.TasksAdapter.OnItemClickListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class TasksFragment : Fragment(R.layout.fragment_tasks) {
+class TasksFragment : Fragment(R.layout.fragment_tasks), OnItemClickListener {
 
     private lateinit var adapter: TasksAdapter
     private val viewModel: TasksViewModel by viewModels()
@@ -35,7 +37,7 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
 
     private fun setUp(binding: FragmentTasksBinding) {
         with(binding) {
-            adapter = TasksAdapter()
+            adapter = TasksAdapter(this@TasksFragment)
             recyclerView.adapter = adapter
             recyclerView.addItemDecoration(
                 DividerItemDecoration(
@@ -96,5 +98,13 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
 
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onItemClicked(task: Task) {
+        viewModel.onTaskSelected(task)
+    }
+
+    override fun onCheckBoxClicked(task: Task) {
+        viewModel.onTaskUpdated(task)
     }
 }
