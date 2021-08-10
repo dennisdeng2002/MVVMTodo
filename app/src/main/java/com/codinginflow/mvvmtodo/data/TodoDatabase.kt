@@ -12,7 +12,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Provider
 
-@Database(entities = [Task::class], version = DATABASE_VERSION)
+@Database(
+    entities = [Task::class],
+    version = DATABASE_VERSION,
+    exportSchema = false
+)
 abstract class TodoDatabase : RoomDatabase() {
 
     companion object {

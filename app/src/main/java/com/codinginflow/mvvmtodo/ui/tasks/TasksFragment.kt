@@ -9,6 +9,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -17,11 +18,13 @@ import com.codinginflow.mvvmtodo.core.ext.onQueryTextChanged
 import com.codinginflow.mvvmtodo.data.preferences.SortOrder
 import com.codinginflow.mvvmtodo.data.task.Task
 import com.codinginflow.mvvmtodo.databinding.FragmentTasksBinding
-import com.codinginflow.mvvmtodo.ui.tasks.TasksViewModel.Event.ShowUndoDeleteTaskMessage
+import com.codinginflow.mvvmtodo.ui.tasks.TasksViewModel.*
+import com.codinginflow.mvvmtodo.ui.tasks.TasksViewModel.Event.*
 import com.codinginflow.mvvmtodo.ui.tasks.adapter.TasksAdapter
 import com.codinginflow.mvvmtodo.ui.tasks.adapter.TasksAdapter.OnItemClickListener
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -72,6 +75,8 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), OnItemClickListener {
             )
 
             itemTouchHelper.attachToRecyclerView(recyclerView)
+
+            addTaskFab.setOnClickListener { viewModel.onAddNewTaskClicked() }
         }
     }
 
@@ -80,13 +85,36 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), OnItemClickListener {
             adapter.submitList(tasks)
         }
 
-        viewModel.events.observe(viewLifecycleOwner) { taskEvent ->
-            when (taskEvent) {
-                is ShowUndoDeleteTaskMessage -> {
-                    Snackbar.make(requireView(), R.string.add_task, Snackbar.LENGTH_INDEFINITE)
-                        .setAction(R.string.undo) { viewModel.onTaskInserted(taskEvent.task) }
-                        .show()
-                }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.events.collect(::handleEvent)
+        }
+    }
+
+    private fun handleEvent(event: Event) {
+        when (event) {
+            NavigateToAddTaskScreen -> {
+                val directions = TasksFragmentDirections.tasksToAddEditTask(
+                    -1,
+                    getString(R.string.add_task)
+                )
+
+                findNavController().navigate(directions)
+            }
+
+            is NavigateToEditTaskScreen -> {
+                val task = event.task
+                val directions = TasksFragmentDirections.tasksToAddEditTask(
+                    task.id,
+                    getString(R.string.edit_task)
+                )
+
+                findNavController().navigate(directions)
+            }
+
+            is ShowUndoDeleteTaskMessage -> {
+                Snackbar.make(requireView(), R.string.add_task, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.undo) { viewModel.onTaskInserted(event.task) }
+                    .show()
             }
         }
     }
@@ -109,10 +137,6 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), OnItemClickListener {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_search -> {
-                true
-            }
-
             R.id.action_sort_by_name -> {
                 viewModel.updateSortOrder(SortOrder.BY_NAME)
                 true

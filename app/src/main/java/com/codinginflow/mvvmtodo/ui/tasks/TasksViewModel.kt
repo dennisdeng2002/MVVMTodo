@@ -7,6 +7,7 @@ import com.codinginflow.mvvmtodo.data.preferences.PreferencesManager
 import com.codinginflow.mvvmtodo.data.preferences.SortOrder
 import com.codinginflow.mvvmtodo.data.task.Task
 import com.codinginflow.mvvmtodo.data.task.TaskDao
+import com.codinginflow.mvvmtodo.ui.tasks.TasksViewModel.Event.NavigateToEditTaskScreen
 import com.codinginflow.mvvmtodo.ui.tasks.TasksViewModel.Event.ShowUndoDeleteTaskMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -23,7 +24,7 @@ class TasksViewModel @Inject constructor(
     val preferences = preferencesManager.preferencesFlow
 
     private val _events = MutableSharedFlow<Event>()
-    val events = _events.asLiveData()
+    val events = _events.asSharedFlow()
 
     val tasks = combine(searchQuery, preferences) { searchQuery, preferences ->
         return@combine Pair(searchQuery, preferences)
@@ -45,7 +46,11 @@ class TasksViewModel @Inject constructor(
         }
     }
 
-    fun onTaskSelected(task: Task) {}
+    fun onTaskSelected(task: Task) {
+        viewModelScope.launch {
+            _events.emit(NavigateToEditTaskScreen(task))
+        }
+    }
 
     fun onTaskInserted(task: Task) {
         viewModelScope.launch {
@@ -66,7 +71,15 @@ class TasksViewModel @Inject constructor(
         }
     }
 
+    fun onAddNewTaskClicked() {
+        viewModelScope.launch {
+            _events.emit(Event.NavigateToAddTaskScreen)
+        }
+    }
+
     sealed class Event {
-        data class ShowUndoDeleteTaskMessage(val task: Task) : Event()
+        object NavigateToAddTaskScreen : Event()
+        class NavigateToEditTaskScreen(val task: Task) : Event()
+        class ShowUndoDeleteTaskMessage(val task: Task) : Event()
     }
 }

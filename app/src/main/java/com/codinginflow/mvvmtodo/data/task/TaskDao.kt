@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TaskDao {
 
+    @Query("SELECT * FROM task WHERE id = :id")
+    suspend fun getTaskById(id: Long?): Task?
+
     fun getTasks(
         searchQuery: String,
         sortOrder: SortOrder,
