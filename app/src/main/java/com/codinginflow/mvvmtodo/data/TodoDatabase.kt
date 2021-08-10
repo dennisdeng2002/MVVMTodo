@@ -9,6 +9,7 @@ import com.codinginflow.mvvmtodo.data.task.TaskDao
 import com.codinginflow.mvvmtodo.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import javax.inject.Provider
 
 @Database(entities = [Task::class], version = DATABASE_VERSION)
@@ -21,7 +22,7 @@ abstract class TodoDatabase : RoomDatabase() {
 
     abstract val taskDao: TaskDao
 
-    class Callback(
+    class Callback @Inject constructor(
         private val database: Provider<TodoDatabase>,
         @ApplicationScope private val appCoroutineScope: CoroutineScope
     ) : RoomDatabase.Callback() {

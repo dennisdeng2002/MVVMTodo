@@ -1,8 +1,7 @@
 package com.codinginflow.mvvmtodo.di
 
-import android.content.Context
+import android.app.Application
 import androidx.room.Room
-import androidx.room.RoomDatabase
 import com.codinginflow.mvvmtodo.data.TodoDatabase
 import com.codinginflow.mvvmtodo.data.task.TaskDao
 import dagger.Module
@@ -21,11 +20,11 @@ class AppModule {
     @Provides
     @Singleton
     fun provideDatabase(
-        context: Context,
-        callback: RoomDatabase.Callback
+        app: Application,
+        callback: TodoDatabase.Callback
     ): TodoDatabase {
         return Room.databaseBuilder(
-            context,
+            app,
             TodoDatabase::class.java,
             TodoDatabase.DATABASE_NAME
         )
