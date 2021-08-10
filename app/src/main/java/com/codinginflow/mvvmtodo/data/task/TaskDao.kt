@@ -1,7 +1,7 @@
 package com.codinginflow.mvvmtodo.data.task
 
 import androidx.room.*
-import com.codinginflow.mvvmtodo.ui.tasks.enums.SortOrder
+import com.codinginflow.mvvmtodo.data.preferences.SortOrder
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -8,13 +8,16 @@ import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.codinginflow.mvvmtodo.R
 import com.codinginflow.mvvmtodo.core.ext.onQueryTextChanged
+import com.codinginflow.mvvmtodo.data.preferences.SortOrder
 import com.codinginflow.mvvmtodo.databinding.FragmentTasksBinding
 import com.codinginflow.mvvmtodo.ui.tasks.adapter.TasksAdapter
-import com.codinginflow.mvvmtodo.ui.tasks.enums.SortOrder
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class TasksFragment : Fragment(R.layout.fragment_tasks) {
@@ -57,6 +60,12 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
         searchView.onQueryTextChanged {
             viewModel.searchQuery.value = it
         }
+
+        val hideCompletedItem = menu.findItem(R.id.action_hide_completed_tasks)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val hideCompleted = viewModel.preferences.first().hideCompleted
+            hideCompletedItem.isChecked = hideCompleted
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -66,18 +75,18 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
             }
 
             R.id.action_sort_by_name -> {
-                viewModel.sortOrder.value = SortOrder.BY_NAME
+                viewModel.updateSortOrder(SortOrder.BY_NAME)
                 true
             }
 
             R.id.action_sort_by_date_created -> {
-                viewModel.sortOrder.value = SortOrder.BY_CREATED_AT
+                viewModel.updateSortOrder(SortOrder.BY_CREATED_AT)
                 true
             }
 
             R.id.action_hide_completed_tasks -> {
                 item.isChecked = !item.isChecked
-                viewModel.hideCompleted.value = item.isChecked
+                viewModel.updateHideCompleted(item.isChecked)
                 true
             }
 
