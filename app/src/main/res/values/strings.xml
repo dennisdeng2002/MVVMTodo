@@ -18,4 +18,6 @@
     <string name="undo">Undo</string>
     <string name="created_template">Created: %1$s</string>
     <string name="name_error">Name cannot be empty</string>
+    <string name="confirm_deletion">Confirm deletion</string>
+    <string name="confirm_deletion_prompt">Do you really want to delete all completed tasks?</string>
 </resources>

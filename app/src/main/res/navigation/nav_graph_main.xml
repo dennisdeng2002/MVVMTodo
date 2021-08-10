@@ -15,6 +15,10 @@
             android:id="@+id/tasks_to_add_edit_task"
             app:destination="@id/add_edit_task_fragment" />
 
+        <action
+            android:id="@+id/tasks_delete_all_completed"
+            app:destination="@id/delete_all_completed_fragment" />
+
     </fragment>
 
     <fragment
@@ -32,5 +36,9 @@
             app:argType="string" />
 
     </fragment>
+
+    <dialog
+        android:id="@+id/delete_all_completed_fragment"
+        android:name="com.codinginflow.mvvmtodo.ui.deleteallcompleted.DeleteAllCompletedDialogFragment" />
 
 </navigation>
