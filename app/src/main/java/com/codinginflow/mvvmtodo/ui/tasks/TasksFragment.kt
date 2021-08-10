@@ -10,13 +10,17 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.codinginflow.mvvmtodo.R
 import com.codinginflow.mvvmtodo.core.ext.onQueryTextChanged
 import com.codinginflow.mvvmtodo.data.preferences.SortOrder
 import com.codinginflow.mvvmtodo.data.task.Task
 import com.codinginflow.mvvmtodo.databinding.FragmentTasksBinding
+import com.codinginflow.mvvmtodo.ui.tasks.TasksViewModel.Event.ShowUndoDeleteTaskMessage
 import com.codinginflow.mvvmtodo.ui.tasks.adapter.TasksAdapter
 import com.codinginflow.mvvmtodo.ui.tasks.adapter.TasksAdapter.OnItemClickListener
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -45,12 +49,45 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), OnItemClickListener {
                     DividerItemDecoration.VERTICAL
                 )
             )
+
+            val itemTouchHelper = ItemTouchHelper(
+                object : ItemTouchHelper.SimpleCallback(
+                    0,
+                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                ) {
+                    override fun onMove(
+                        recyclerView: RecyclerView,
+                        viewHolder: RecyclerView.ViewHolder,
+                        target: RecyclerView.ViewHolder
+                    ): Boolean = false
+
+                    override fun onSwiped(
+                        viewHolder: RecyclerView.ViewHolder,
+                        direction: Int
+                    ) {
+                        val task = adapter.currentList[viewHolder.adapterPosition]
+                        viewModel.onTaskDeleted(task)
+                    }
+                }
+            )
+
+            itemTouchHelper.attachToRecyclerView(recyclerView)
         }
     }
 
     private fun observeViewModel() {
         viewModel.tasks.observe(viewLifecycleOwner) { tasks ->
             adapter.submitList(tasks)
+        }
+
+        viewModel.events.observe(viewLifecycleOwner) { taskEvent ->
+            when (taskEvent) {
+                is ShowUndoDeleteTaskMessage -> {
+                    Snackbar.make(requireView(), R.string.add_task, Snackbar.LENGTH_INDEFINITE)
+                        .setAction(R.string.undo) { viewModel.onTaskInserted(taskEvent.task) }
+                        .show()
+                }
+            }
         }
     }
 

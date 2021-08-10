@@ -1,6 +1,5 @@
 package com.codinginflow.mvvmtodo.ui.tasks
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -8,10 +7,9 @@ import com.codinginflow.mvvmtodo.data.preferences.PreferencesManager
 import com.codinginflow.mvvmtodo.data.preferences.SortOrder
 import com.codinginflow.mvvmtodo.data.task.Task
 import com.codinginflow.mvvmtodo.data.task.TaskDao
+import com.codinginflow.mvvmtodo.ui.tasks.TasksViewModel.Event.ShowUndoDeleteTaskMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,10 +22,10 @@ class TasksViewModel @Inject constructor(
     val searchQuery = MutableStateFlow("")
     val preferences = preferencesManager.preferencesFlow
 
-    val tasks: LiveData<List<Task>> = combine(
-        searchQuery,
-        preferences
-    ) { searchQuery, preferences ->
+    private val _events = MutableSharedFlow<Event>()
+    val events = _events.asLiveData()
+
+    val tasks = combine(searchQuery, preferences) { searchQuery, preferences ->
         return@combine Pair(searchQuery, preferences)
     }
         .flatMapLatest { (searchQuery, preferences) ->
@@ -49,9 +47,26 @@ class TasksViewModel @Inject constructor(
 
     fun onTaskSelected(task: Task) {}
 
+    fun onTaskInserted(task: Task) {
+        viewModelScope.launch {
+            taskDao.insert(task)
+        }
+    }
+
     fun onTaskUpdated(task: Task) {
         viewModelScope.launch {
             taskDao.update(task)
         }
+    }
+
+    fun onTaskDeleted(task: Task) {
+        viewModelScope.launch {
+            taskDao.delete(task)
+            _events.emit(ShowUndoDeleteTaskMessage(task))
+        }
+    }
+
+    sealed class Event {
+        data class ShowUndoDeleteTaskMessage(val task: Task) : Event()
     }
 }
