@@ -13,6 +13,7 @@ import com.codinginflow.mvvmtodo.R
 import com.codinginflow.mvvmtodo.core.ext.onQueryTextChanged
 import com.codinginflow.mvvmtodo.databinding.FragmentTasksBinding
 import com.codinginflow.mvvmtodo.ui.tasks.adapter.TasksAdapter
+import com.codinginflow.mvvmtodo.ui.tasks.enums.SortOrder
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -54,25 +55,29 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
         val searchItem = menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView
         searchView.onQueryTextChanged {
-            viewModel.setSearchQuery(it)
+            viewModel.searchQuery.value = it
         }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.groupId) {
+        return when (item.itemId) {
             R.id.action_search -> {
                 true
             }
 
             R.id.action_sort_by_name -> {
+                viewModel.sortOrder.value = SortOrder.BY_NAME
                 true
             }
 
             R.id.action_sort_by_date_created -> {
+                viewModel.sortOrder.value = SortOrder.BY_CREATED_AT
                 true
             }
 
             R.id.action_hide_completed_tasks -> {
+                item.isChecked = !item.isChecked
+                viewModel.hideCompleted.value = item.isChecked
                 true
             }
 

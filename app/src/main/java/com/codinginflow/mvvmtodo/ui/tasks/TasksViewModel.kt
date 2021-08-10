@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import com.codinginflow.mvvmtodo.data.task.Task
 import com.codinginflow.mvvmtodo.data.task.TaskDao
+import com.codinginflow.mvvmtodo.ui.tasks.enums.SortOrder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import javax.inject.Inject
 
@@ -15,13 +17,19 @@ class TasksViewModel @Inject constructor(
     taskDao: TaskDao
 ) : ViewModel() {
 
-    private val _searchQuery: MutableStateFlow<String> = MutableStateFlow("")
+    val searchQuery = MutableStateFlow("")
+    val sortOrder = MutableStateFlow(SortOrder.BY_CREATED_AT)
+    val hideCompleted = MutableStateFlow(false)
 
-    fun setSearchQuery(query: String) {
-        _searchQuery.value = query
+    val tasks: LiveData<List<Task>> = combine(
+        searchQuery,
+        sortOrder,
+        hideCompleted
+    ) { searchQuery, sortOrder, hideCompleted ->
+        return@combine Triple(searchQuery, sortOrder, hideCompleted)
     }
-
-    val tasks: LiveData<List<Task>> = _searchQuery
-        .flatMapLatest { query -> taskDao.getTasks("%${query}%") }
+        .flatMapLatest { (searchQuery, sortOrder, hideCompleted) ->
+            taskDao.getTasks(searchQuery, sortOrder, hideCompleted)
+        }
         .asLiveData()
 }
