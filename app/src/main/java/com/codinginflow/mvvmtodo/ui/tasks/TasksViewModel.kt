@@ -1,24 +1,32 @@
 package com.codinginflow.mvvmtodo.ui.tasks
 
-import androidx.lifecycle.ViewModel
+import android.annotation.SuppressLint
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.codinginflow.mvvmtodo.R
+import com.codinginflow.mvvmtodo.core.constants.ADD_TASK_RESULT_OK
+import com.codinginflow.mvvmtodo.core.constants.EDIT_TASK_RESULT_OK
 import com.codinginflow.mvvmtodo.data.preferences.PreferencesManager
 import com.codinginflow.mvvmtodo.data.preferences.SortOrder
 import com.codinginflow.mvvmtodo.data.task.Task
 import com.codinginflow.mvvmtodo.data.task.TaskDao
-import com.codinginflow.mvvmtodo.ui.tasks.TasksViewModel.Event.NavigateToEditTaskScreen
-import com.codinginflow.mvvmtodo.ui.tasks.TasksViewModel.Event.ShowUndoDeleteTaskMessage
+import com.codinginflow.mvvmtodo.ui.tasks.TasksViewModel.Event.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
+@SuppressLint("StaticFieldLeak")
 class TasksViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val taskDao: TaskDao,
     private val preferencesManager: PreferencesManager
-) : ViewModel() {
+) : AndroidViewModel(context as Application) {
 
     val searchQuery = MutableStateFlow("")
     val preferences = preferencesManager.preferencesFlow
@@ -73,7 +81,25 @@ class TasksViewModel @Inject constructor(
 
     fun onAddNewTaskClicked() {
         viewModelScope.launch {
-            _events.emit(Event.NavigateToAddTaskScreen)
+            _events.emit(NavigateToAddTaskScreen)
+        }
+    }
+
+    fun onAddedOrEditedTask(result: Int) {
+        viewModelScope.launch {
+            when (result) {
+                ADD_TASK_RESULT_OK -> _events.emit(
+                    ShowTaskSavedConfirmationMessage(
+                        context.getString(R.string.task_deleted)
+                    )
+                )
+
+                EDIT_TASK_RESULT_OK -> _events.emit(
+                    ShowTaskSavedConfirmationMessage(
+                        context.getString(R.string.task_edited)
+                    )
+                )
+            }
         }
     }
 
@@ -81,5 +107,6 @@ class TasksViewModel @Inject constructor(
         object NavigateToAddTaskScreen : Event()
         class NavigateToEditTaskScreen(val task: Task) : Event()
         class ShowUndoDeleteTaskMessage(val task: Task) : Event()
+        class ShowTaskSavedConfirmationMessage(val message: String) : Event()
     }
 }

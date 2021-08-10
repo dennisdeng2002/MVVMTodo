@@ -7,6 +7,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -14,6 +15,8 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.codinginflow.mvvmtodo.R
+import com.codinginflow.mvvmtodo.core.constants.ADD_EDIT_REQUEST_KEY
+import com.codinginflow.mvvmtodo.core.constants.ADD_EDIT_RESULT_KEY
 import com.codinginflow.mvvmtodo.core.ext.onQueryTextChanged
 import com.codinginflow.mvvmtodo.data.preferences.SortOrder
 import com.codinginflow.mvvmtodo.data.task.Task
@@ -77,6 +80,11 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), OnItemClickListener {
             itemTouchHelper.attachToRecyclerView(recyclerView)
 
             addTaskFab.setOnClickListener { viewModel.onAddNewTaskClicked() }
+
+            setFragmentResultListener(ADD_EDIT_REQUEST_KEY) { _, bundle ->
+                val result = bundle.getInt(ADD_EDIT_RESULT_KEY)
+                viewModel.onAddedOrEditedTask(result)
+            }
         }
     }
 
@@ -115,6 +123,10 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), OnItemClickListener {
                 Snackbar.make(requireView(), R.string.add_task, Snackbar.LENGTH_INDEFINITE)
                     .setAction(R.string.undo) { viewModel.onTaskInserted(event.task) }
                     .show()
+            }
+
+            is ShowTaskSavedConfirmationMessage -> {
+                Snackbar.make(requireView(), event.message, Snackbar.LENGTH_LONG).show()
             }
         }
     }

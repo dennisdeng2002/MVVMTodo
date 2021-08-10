@@ -12,7 +12,10 @@
     <string name="sort_by_date_created">Sort by date created</string>
     <string name="hide_completed">Hide completed</string>
     <string name="delete_all_completed">Delete all completed</string>
-    <string name="task_deleted">Add Task</string>
+    <string name="task_added">Task added</string>
+    <string name="task_edited">Task edited</string>
+    <string name="task_deleted">Task deleted</string>
     <string name="undo">Undo</string>
     <string name="created_template">Created: %1$s</string>
+    <string name="name_error">Name cannot be empty</string>
 </resources>
