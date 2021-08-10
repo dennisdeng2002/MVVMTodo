@@ -6,8 +6,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TaskDao {
 
-    @Query("SELECT * from task")
-    fun getTasks(): Flow<List<Task>>
+    // Assumes that searchQuery is passed in like "%foo%"
+    @Query("SELECT * from task WHERE name LIKE :searchQuery")
+    fun getTasks(searchQuery: String): Flow<List<Task>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(task: Task)
